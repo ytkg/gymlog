@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gym Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a1021;
+      --panel: rgba(18, 26, 46, 0.9);
+      --card: rgba(24, 34, 58, 0.9);
+      --accent: #1dd3b0;
+      --accent-2: #f4a949;
+      --text: #e8eef8;
+      --muted: #9fb2cd;
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 15px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(120% 120% at 20% 20%, rgba(29, 211, 176, 0.16), transparent 45%),
+                  radial-gradient(120% 120% at 80% 0%, rgba(244, 169, 73, 0.14), transparent 40%),
+                  linear-gradient(135deg, #0a1021 0%, #0f172a 70%, #0a1021 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(600px at 10% 20%, rgba(29, 211, 176, 0.08), transparent 40%),
+                  radial-gradient(500px at 80% 0%, rgba(244, 169, 73, 0.08), transparent 35%);
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 20px 56px;
+      z-index: 1;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(29, 211, 176, 0.12);
+      color: var(--accent);
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(29, 211, 176, 0.24);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 720px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .stat-hint {
+      color: var(--accent-2);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sparkline {
+      margin-top: 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .sparkline svg {
+      width: 100%;
+      height: 140px;
+      display: block;
+    }
+
+    .sparkline-labels {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.2px;
+    }
+
+    .sparkline-labels span {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 4px 6px;
+    }
+
+    .chart {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 96px 1fr 56px;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .bar-track {
+      position: relative;
+      width: 100%;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      position: absolute;
+      inset: 0;
+      width: 0;
+      background: linear-gradient(90deg, #1dd3b0, #4deac6);
+      border-radius: 8px;
+      transition: width 0.6s ease;
+    }
+
+    .bar-value {
+      text-align: right;
+      color: var(--text);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .bar-value small {
+      display: block;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    .entries {
+      display: grid;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .entry {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: grid;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .entry-date {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.2px;
+    }
+
+    .entry-date .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f4a949, #1dd3b0);
+      box-shadow: 0 0 0 6px rgba(29, 211, 176, 0.08);
+    }
+
+    .entry-body {
+      white-space: pre-line;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .notice {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(29, 211, 176, 0.2);
+      background: rgba(29, 211, 176, 0.06);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .notice code {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--text);
+      font-family: "Space Grotesk", "Noto Sans JP", monospace;
+      font-size: 13px;
+    }
+
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 2fr 1.1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="page">
+    <header>
+      <div class="title">
+        <div class="pill">GYM LOG</div>
+        トレーニングの軌跡
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">エントリー一覧</div>
+          <div class="status" data-status>読み込み中...</div>
+        </div>
+        <div class="entries" id="entries"></div>
+        <div class="notice" id="hint" hidden>
+          ローカルで開く場合は簡易サーバーが必要です。
+          例: <code>ruby -run -e httpd src -p 8000</code> を実行し、
+          <code>http://localhost:8000/index.html</code> を開いてください。
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">サマリー</div>
+        </div>
+        <div class="stats" id="stats"></div>
+
+        <div class="panel-header" style="margin-top: 12px;">
+          <div class="panel-title">最近の推移</div>
+          <div class="status" id="sparkline-status">最大8か月</div>
+        </div>
+        <div class="sparkline" id="sparkline"></div>
+
+        <div class="panel-header" style="margin-top: 16px;">
+          <div class="panel-title">月ごとの回数</div>
+        </div>
+        <div class="chart" id="chart"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const MONTHLY_FEE = 7678;
+
+    const entriesEl = document.getElementById("entries");
+    const chartEl = document.getElementById("chart");
+    const statsEl = document.getElementById("stats");
+    const statusEl = document.querySelector("[data-status]");
+    const sparklineEl = document.getElementById("sparkline");
+    const sparklineStatusEl = document.getElementById("sparkline-status");
+    const hintEl = document.getElementById("hint");
+    const isFile = window.location.protocol === "file:";
+
+    const showHint = () => {
+      if (hintEl) hintEl.hidden = false;
+    };
+
+    const formatDate = (iso) =>
+      new Date(iso).toLocaleDateString("ja-JP", {
+        month: "short",
+        day: "numeric",
+        weekday: "short",
+        year: "numeric"
+      });
+
+    const monthLabel = (iso) => {
+      const d = new Date(iso);
+      if (Number.isNaN(d)) return iso.slice(0, 7);
+      return `${String(d.getFullYear()).slice(2)}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+    };
+
+    const yen = (n) => `¥${Math.round(n).toLocaleString("ja-JP")}`;
+
+    const currentMonthKey = () => {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    };
+
+    const renderEntries = (entries) => {
+      if (!entries.length) {
+        entriesEl.innerHTML = '<div class="empty">記録がまだありません。</div>';
+        return;
+      }
+
+      const fragments = entries
+        .slice()
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .map(
+          (entry) => `
+            <article class="entry">
+              <div class="entry-date">
+                <span class="dot" aria-hidden="true"></span>
+                <span>${formatDate(entry.date)}</span>
+              </div>
+              <div class="entry-body">${entry.body ? entry.body.replace(/\n/g, "<br>") : ""}</div>
+            </article>
+          `
+        )
+        .join("");
+
+      entriesEl.innerHTML = fragments;
+    };
+
+    const renderChart = (months) => {
+      if (!months.length) {
+        chartEl.innerHTML = '<div class="empty">データなし</div>';
+        return;
+      }
+
+      const max = Math.max(...months.map((m) => m.count));
+      chartEl.innerHTML = months
+        .slice()
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .map(
+          (m) => {
+            const price = m.count > 0 ? yen(MONTHLY_FEE / m.count) : "–";
+            return `
+            <div class="bar">
+              <div>${m.date.slice(0, 7)}</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: ${(m.count / max) * 100}%"></div>
+              </div>
+              <div class="bar-value">${m.count} 回<small>${price}/回</small></div>
+            </div>
+            `;
+          }
+        )
+        .join("");
+    };
+
+    const renderSparkline = (months) => {
+      if (!sparklineEl) return;
+
+      if (!months.length) {
+        sparklineEl.innerHTML = '<div class="empty">データなし</div>';
+        if (sparklineStatusEl) sparklineStatusEl.textContent = "";
+        return;
+      }
+
+      const sorted = months
+        .slice()
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(-8);
+
+      const max = Math.max(...sorted.map((m) => m.count), 1);
+      const pad = 10;
+      const height = 110;
+      const spacing = 44;
+      const width = pad * 2 + (sorted.length - 1) * spacing;
+
+      const coords = sorted.map((m, i) => {
+        const x = pad + spacing * i;
+        const y = pad + (1 - m.count / max) * (height - pad * 2);
+        return { x, y };
+      });
+
+      const linePoints = coords.map((c) => `${c.x},${c.y}`).join(" ");
+      const areaPoints = `${coords[0].x},${height - pad} ${linePoints} ${coords[coords.length - 1].x},${height - pad}`;
+
+      const labels = sorted.map((m) => `<span>${monthLabel(m.date)}</span>`).join("");
+
+      sparklineEl.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="月別の推移">
+          <defs>
+            <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#1dd3b0" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#1dd3b0" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon points="${areaPoints}" fill="url(#spark-fill)"></polygon>
+          <polyline points="${linePoints}" fill="none" stroke="#1dd3b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          ${coords
+            .map(
+              (c) => `<circle cx="${c.x}" cy="${c.y}" r="4" fill="#0a1021" stroke="#1dd3b0" stroke-width="2"></circle>`
+            )
+            .join("")}
+        </svg>
+        <div class="sparkline-labels">${labels}</div>
+      `;
+
+      if (sparklineStatusEl) sparklineStatusEl.textContent = `${sorted.length} か月表示`;
+    };
+
+    const renderStats = (entries, months) => {
+      if (!entries.length) {
+        statsEl.innerHTML = "";
+        return;
+      }
+
+      const latest = entries.slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      const total = entries.length;
+      const currentKey = currentMonthKey();
+      const currentMonth = months.find((m) => m.date === currentKey);
+      const currentCount = currentMonth ? currentMonth.count : 0;
+      const currentPrice = currentCount > 0 ? yen(MONTHLY_FEE / currentCount) : null;
+
+      statsEl.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">総エントリー</div>
+          <div class="stat-value">${total}</div>
+          <div class="stat-hint">これまでの積み重ね</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">最新の記録</div>
+          <div class="stat-value">${formatDate(latest.date)}</div>
+          <div class="stat-hint">直近でアップした日付</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">今月の回数</div>
+          <div class="stat-value">${currentCount}</div>
+          <div class="stat-hint">${monthLabel(currentKey)} の記録数</div>
+        </div>
+        ${
+          currentPrice
+            ? `<div class="stat">
+                 <div class="stat-label">1回あたり</div>
+                 <div class="stat-value">${currentPrice}</div>
+                 <div class="stat-hint">${monthLabel(currentKey)} 時点</div>
+               </div>`
+            : ""
+        }
+      `;
+    };
+
+    const loadData = async () => {
+      try {
+        const res = await fetch("./logs.json", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        renderEntries(data.entries || []);
+        renderChart(data.month_counts || []);
+        renderSparkline(data.month_counts || []);
+        renderStats(data.entries || [], data.month_counts || []);
+        if (statusEl) statusEl.textContent = "更新完了";
+      } catch (err) {
+        console.error(err);
+        entriesEl.innerHTML = '<div class="empty">データの取得に失敗しました。<br>logs.json が存在するか確認してください。</div>';
+        chartEl.innerHTML = "";
+        statsEl.innerHTML = "";
+        if (sparklineEl) sparklineEl.innerHTML = "";
+        if (sparklineStatusEl) sparklineStatusEl.textContent = "";
+        if (statusEl) statusEl.textContent = "読み込みエラー";
+        if (isFile) showHint();
+      }
+    };
+
+    if (isFile) {
+      showHint();
+      if (statusEl) statusEl.textContent = "ローカル閲覧には簡易サーバーが必要です";
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
