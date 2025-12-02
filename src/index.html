@@ -305,6 +305,23 @@
       font-size: 13px;
     }
 
+    .footer {
+      margin-top: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
     @media (min-width: 900px) {
       .grid {
         grid-template-columns: 2fr 1.1fr;
@@ -354,6 +371,10 @@
         <div class="chart" id="chart"></div>
       </section>
     </div>
+
+    <footer class="footer">
+      <a href="https://github.com/ytkg/gymlog" target="_blank" rel="noreferrer">GitHub: ytkg/gymlog</a>
+    </footer>
   </div>
 
   <script>
@@ -382,8 +403,13 @@
 
     const monthLabel = (iso) => {
       const d = new Date(iso);
-      if (Number.isNaN(d)) return iso.slice(0, 7);
-      return `${String(d.getFullYear()).slice(2)}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (Number.isNaN(d)) {
+        const fallback = iso.slice(0, 7).split("-");
+        return `${fallback[0]?.slice(2)}年${fallback[1]}月`;
+      }
+      const year = String(d.getFullYear()).slice(2);
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      return `${year}年${month}月`;
     };
 
     const yen = (n) => `¥${Math.round(n).toLocaleString("ja-JP")}`;
@@ -433,7 +459,7 @@
             const price = m.count > 0 ? yen(MONTHLY_FEE / m.count) : "–";
             return `
             <div class="bar">
-              <div>${m.date.slice(0, 7)}</div>
+              <div>${monthLabel(m.date)}</div>
               <div class="bar-track">
                 <div class="bar-fill" style="width: ${(m.count / max) * 100}%"></div>
               </div>
@@ -504,7 +530,6 @@
         return;
       }
 
-      const latest = entries.slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0];
       const total = entries.length;
       const currentKey = currentMonthKey();
       const currentMonth = months.find((m) => m.date === currentKey);
@@ -516,11 +541,6 @@
           <div class="stat-label">総エントリー</div>
           <div class="stat-value">${total}</div>
           <div class="stat-hint">これまでの積み重ね</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">最新の記録</div>
-          <div class="stat-value">${formatDate(latest.date)}</div>
-          <div class="stat-hint">直近でアップした日付</div>
         </div>
         <div class="stat">
           <div class="stat-label">今月の回数</div>
