@@ -164,10 +164,17 @@ const renderSparkline = (months) => {
         },
         yCounts: {
           position: "left",
-          ticks: { color: "#e8eef8" },
+          ticks: {
+            color: "#e8eef8",
+            stepSize: 1,
+            precision: 0,
+            callback: (value) => Math.round(value)
+          },
           grid: { color: "rgba(255, 255, 255, 0.1)" },
           title: { display: true, text: "回数", color: "#e8eef8" },
-          beginAtZero: true
+          beginAtZero: true,
+          min: 0,
+          suggestedMin: 0
         },
         yPrice: {
           position: "right",
@@ -176,7 +183,10 @@ const renderSparkline = (months) => {
             callback: (value) => yen(value)
           },
           grid: { drawOnChartArea: false, color: "rgba(255, 255, 255, 0.12)" },
-          title: { display: true, text: "円/回", color: "#e8eef8" }
+          title: { display: true, text: "円/回", color: "#e8eef8" },
+          beginAtZero: true,
+          min: 0,
+          suggestedMin: 0
         }
       },
       plugins: {
