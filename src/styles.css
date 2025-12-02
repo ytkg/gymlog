@@ -283,9 +283,3 @@ header {
 .footer a:hover {
   text-decoration: underline;
 }
-
-@media (min-width: 900px) {
-  .grid {
-    grid-template-columns: 2fr 1.1fr;
-  }
-}
