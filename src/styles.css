@@ -36,7 +36,7 @@ body {
   position: relative;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 36px 20px 56px;
+  padding: 20px 16px 32px;
   z-index: 1;
 }
 
@@ -44,7 +44,7 @@ header {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .title {
@@ -268,7 +268,7 @@ header {
 }
 
 .footer {
-  margin-top: 32px;
+  margin-top: 24px;
   text-align: center;
   color: var(--muted);
   font-size: 14px;
