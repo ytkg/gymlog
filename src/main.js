@@ -110,15 +110,12 @@ const buildChartConfig = (labels, counts, prices) => ({
     labels,
     datasets: [
       {
+        type: "bar",
         label: "回数",
         data: counts,
-        borderColor: "#1dd3b0",
-        backgroundColor: "rgba(29, 211, 176, 0.22)",
-        tension: 0,
-        fill: true,
-        pointRadius: 4,
-        pointBackgroundColor: "#0a1021",
-        pointBorderColor: "#1dd3b0",
+        borderColor: "transparent",
+        backgroundColor: "rgba(29, 211, 176, 0.7)",
+        borderRadius: 6,
         yAxisID: "yCounts"
       },
       {
