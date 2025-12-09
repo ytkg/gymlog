@@ -1,0 +1,8 @@
+name = "gymlog-worker"
+main = "worker/index.ts"
+compatibility_date = "2024-06-20"
+workers_dev = true
+
+[assets]
+directory = "src"
+binding = "ASSETS"

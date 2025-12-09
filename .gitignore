@@ -1,0 +1,12 @@
+# Node modules
+node_modules/
+
+# Cloudflare Wrangler
+.wrangler/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
