@@ -5,6 +5,7 @@ import { setStatus } from "./ui.js";
 import {
   currentMonthKey,
   ensureArray,
+  escapeHtml,
   formatDate,
   formatDateTime,
   monthLabel,
@@ -30,7 +31,7 @@ export const renderEntries = (entries) => {
             <span class="dot" aria-hidden="true"></span>
             <span>${formatDate(entry.date)}</span>
           </div>
-          <div class="entry-body">${entry.body ? entry.body.replace(/\n/g, "<br>") : ""}</div>
+          <div class="entry-body">${entry.body ? escapeHtml(entry.body).replace(/\n/g, "<br>") : ""}</div>
         </article>
       `
     )
