@@ -1,8 +1,15 @@
 import type { Context } from "hono";
 import { Hono } from "hono";
+import { CACHE_CONTROL_REVALIDATE, cacheHeaders, ifNoneMatchHasEtag } from "./lib/httpCache";
 import { buildMeta } from "./lib/meta";
 import { monthCounts } from "./lib/monthCounts";
 import { parseEntries } from "./lib/parseEntries";
+import {
+  getObjectOrNull,
+  R2GetFailedError,
+  R2ReadFailedError,
+  readObjectText,
+} from "./lib/r2Object";
 
 type Bindings = {
   ASSETS: Fetcher;
@@ -13,51 +20,23 @@ type AppEnv = { Bindings: Bindings };
 const app = new Hono<AppEnv>();
 
 const LOG_KEY = "ジム記録/logs.md";
-const CACHE_CONTROL = "no-cache, max-age=0, must-revalidate";
+const CACHE_CONTROL = CACHE_CONTROL_REVALIDATE;
 
 const jsonError = (c: Context<AppEnv>, status: number, code: string, message: string) =>
   c.json({ error: { message, code } }, status);
 
-const etagHeaderValue = (etag: string) => `"${etag}"`;
-
-const ifNoneMatchHasEtag = (ifNoneMatch: string | undefined, etag: string) => {
-  if (!ifNoneMatch) return false;
-  const normalized = ifNoneMatch
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((value) => value.replace(/^W\//i, "").replace(/^"/, "").replace(/"$/, ""));
-  return normalized.includes(etag);
-};
-
-const cacheHeaders = (etag: string | null): Record<string, string> => {
-  const headers: Record<string, string> = { "Cache-Control": CACHE_CONTROL };
-  if (etag) headers.ETag = etagHeaderValue(etag);
-  return headers;
-};
-
-const getLogObject = async (c: Context<AppEnv>) => {
+app.get("/api/logs.json", async (c) => {
+  let object: R2ObjectBody | null;
   try {
-    return await c.env.OBSIDIAN.get(LOG_KEY);
+    object = await getObjectOrNull(c.env.OBSIDIAN, LOG_KEY);
   } catch (err) {
-    console.error("R2 get failed", err);
+    if (err instanceof R2GetFailedError) {
+      console.error(err.message, err.cause);
+    } else {
+      console.error("R2 get failed", err);
+    }
     return jsonError(c, 500, "R2_GET_FAILED", `R2 から ${LOG_KEY} を取得できませんでした`);
   }
-};
-
-const readObjectText = async (c: Context<AppEnv>, object: R2ObjectBody) => {
-  try {
-    return await object.text();
-  } catch (err) {
-    console.error("R2 read failed", err);
-    return jsonError(c, 500, "R2_READ_FAILED", `R2 の ${LOG_KEY} の読み込みに失敗しました`);
-  }
-};
-
-app.get("/api/logs.json", async (c) => {
-  const objectOrResponse = await getLogObject(c);
-  if (objectOrResponse instanceof Response) return objectOrResponse;
-  const object = objectOrResponse;
 
   if (!object) {
     return jsonError(c, 404, "LOGS_NOT_FOUND", `R2 に ${LOG_KEY} が見つかりません`);
@@ -65,19 +44,27 @@ app.get("/api/logs.json", async (c) => {
 
   const etag = object.etag || null;
   if (etag && ifNoneMatchHasEtag(c.req.header("if-none-match"), etag)) {
-    return c.body(null, 304, cacheHeaders(etag));
+    return c.body(null, 304, cacheHeaders(CACHE_CONTROL, etag));
   }
 
-  const textOrResponse = await readObjectText(c, object);
-  if (textOrResponse instanceof Response) return textOrResponse;
-  const bodyText = textOrResponse;
+  let bodyText: string;
+  try {
+    bodyText = await readObjectText(object, LOG_KEY);
+  } catch (err) {
+    if (err instanceof R2ReadFailedError) {
+      console.error(err.message, err.cause);
+    } else {
+      console.error("R2 read failed", err);
+    }
+    return jsonError(c, 500, "R2_READ_FAILED", `R2 の ${LOG_KEY} の読み込みに失敗しました`);
+  }
 
   try {
     const entries = parseEntries(bodyText);
     const months = monthCounts(entries);
     const meta = buildMeta(entries, months, LOG_KEY);
 
-    return c.json({ entries, month_counts: months, meta }, 200, cacheHeaders(etag));
+    return c.json({ entries, month_counts: months, meta }, 200, cacheHeaders(CACHE_CONTROL, etag));
   } catch (err) {
     console.error("logs processing failed", err);
     return jsonError(c, 500, "INTERNAL_ERROR", "ログの処理中にエラーが発生しました");
