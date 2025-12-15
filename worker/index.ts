@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { buildMeta } from "./lib/meta";
 import { monthCounts } from "./lib/monthCounts";
 import { parseEntries } from "./lib/parseEntries";
 
@@ -18,8 +19,9 @@ app.get("/api/logs.json", async (c) => {
   const bodyText = await object.text();
   const entries = parseEntries(bodyText);
   const months = monthCounts(entries);
+  const meta = buildMeta(entries, months, LOG_KEY);
 
-  return c.json({ entries, month_counts: months });
+  return c.json({ entries, month_counts: months, meta });
 });
 
 app.get("*", async (c) => {
