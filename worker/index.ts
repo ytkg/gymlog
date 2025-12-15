@@ -17,6 +17,20 @@ const app = new Hono<AppEnv>();
 const jsonError = (c: Context<AppEnv>, status: number, code: string, message: string) =>
   c.json({ error: { message, code } }, status);
 
+const cacheControl = "no-cache, max-age=0, must-revalidate";
+
+const etagHeaderValue = (etag: string) => `"${etag}"`;
+
+const ifNoneMatchHasEtag = (ifNoneMatch: string | undefined, etag: string) => {
+  if (!ifNoneMatch) return false;
+  const normalized = ifNoneMatch
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((value) => value.replace(/^W\//i, "").replace(/^"/, "").replace(/"$/, ""));
+  return normalized.includes(etag);
+};
+
 app.get("/api/logs.json", async (c) => {
   let object: R2ObjectBody | null;
   try {
@@ -28,6 +42,11 @@ app.get("/api/logs.json", async (c) => {
 
   if (!object) {
     return jsonError(c, 404, "LOGS_NOT_FOUND", `R2 に ${LOG_KEY} が見つかりません`);
+  }
+
+  const etag = object.etag || null;
+  if (etag && ifNoneMatchHasEtag(c.req.header("if-none-match"), etag)) {
+    return c.body(null, 304, { ETag: etagHeaderValue(etag), "Cache-Control": cacheControl });
   }
 
   let bodyText: string;
@@ -43,7 +62,9 @@ app.get("/api/logs.json", async (c) => {
     const months = monthCounts(entries);
     const meta = buildMeta(entries, months, LOG_KEY);
 
-    return c.json({ entries, month_counts: months, meta });
+    const headers: Record<string, string> = { "Cache-Control": cacheControl };
+    if (etag) headers.ETag = etagHeaderValue(etag);
+    return c.json({ entries, month_counts: months, meta }, 200, headers);
   } catch (err) {
     console.error("logs processing failed", err);
     return jsonError(c, 500, "INTERNAL_ERROR", "ログの処理中にエラーが発生しました");
