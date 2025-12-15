@@ -6,3 +6,8 @@ workers_dev = true
 [assets]
 directory = "src"
 binding = "ASSETS"
+
+[[r2_buckets]]
+binding = "OBSIDIAN"
+bucket_name = "obsidian"
+preview_bucket_name = "obsidian"

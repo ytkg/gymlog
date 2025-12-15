@@ -1,10 +1,26 @@
 import { Hono } from "hono";
+import { monthCounts } from "./lib/monthCounts";
+import { parseEntries } from "./lib/parseEntries";
 
 type Bindings = {
   ASSETS: Fetcher;
+  OBSIDIAN: R2Bucket;
 };
 
+const LOG_KEY = "ジム記録/logs.md";
+
 const app = new Hono<{ Bindings: Bindings }>();
+
+app.get("/api/logs.json", async (c) => {
+  const object = await c.env.OBSIDIAN.get(LOG_KEY);
+  if (!object) return c.json({ error: "logs.md not found" }, 404);
+
+  const bodyText = await object.text();
+  const entries = parseEntries(bodyText);
+  const months = monthCounts(entries);
+
+  return c.json({ entries, month_counts: months });
+});
 
 app.get("*", async (c) => {
   const { ASSETS } = c.env;

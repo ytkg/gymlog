@@ -282,7 +282,8 @@ const handleLoadError = (err) => {
 };
 
 const fetchLogs = async () => {
-  const res = await fetch("./logs.json", { cache: "no-store" });
+  const apiPath = "/api/logs.json";
+  const res = await fetch(apiPath, { cache: "no-store" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 };
