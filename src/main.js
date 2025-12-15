@@ -24,6 +24,16 @@ const showHint = () => {
   if (dom.hint) dom.hint.hidden = false;
 };
 
+const formatDateTime = (iso) =>
+  new Date(iso).toLocaleString("ja-JP", {
+    month: "short",
+    day: "numeric",
+    weekday: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString("ja-JP", {
     month: "short",
@@ -49,6 +59,17 @@ const currentMonthKey = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 };
+
+const latestEntryDate = (entries) =>
+  entries.reduce((latest, entry) => (entry.date > latest ? entry.date : latest), "") || null;
+
+const normalizeMeta = (entries, months, meta) => ({
+  totalEntries: meta?.total_entries ?? entries.length,
+  totalMonths: meta?.total_months ?? months.length,
+  latestEntryDate: meta?.latest_entry_date ?? latestEntryDate(entries),
+  generatedAt: meta?.generated_at ?? null,
+  source: meta?.source ?? "unknown"
+});
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -225,24 +246,26 @@ const renderSparkline = (months) => {
   if (dom.sparklineStatus) dom.sparklineStatus.textContent = `${sorted.length} か月表示`;
 };
 
-const renderStats = (entries, months) => {
+const renderStats = (entries, months, meta) => {
   if (!dom.stats) return;
   if (!entries.length) {
     dom.stats.innerHTML = "";
     return;
   }
 
-  const total = entries.length;
+  const total = meta.totalEntries;
+  const totalMonths = meta.totalMonths;
   const currentKey = currentMonthKey();
   const currentMonth = months.find((m) => m.date === currentKey);
   const currentCount = currentMonth ? currentMonth.count : 0;
   const currentPrice = currentCount > 0 ? yen(MONTHLY_FEE / currentCount) : null;
+  const latestEntry = meta.latestEntryDate ? formatDate(meta.latestEntryDate) : "なし";
 
   dom.stats.innerHTML = `
     <div class="stat">
       <div class="stat-label">総エントリー</div>
       <div class="stat-value">${total}</div>
-      <div class="stat-hint">これまでの積み重ね</div>
+      <div class="stat-hint">これまでの積み重ね（${totalMonths} か月）</div>
     </div>
     <div class="stat">
       <div class="stat-label">今月の回数</div>
@@ -258,16 +281,28 @@ const renderStats = (entries, months) => {
            </div>`
         : ""
     }
+    <div class="stat">
+      <div class="stat-label">最新の記録</div>
+      <div class="stat-value">${latestEntry}</div>
+      <div class="stat-hint">ソース: ${meta.source}</div>
+    </div>
   `;
 };
 
 const renderAll = (data) => {
   const entries = ensureArray(data.entries);
   const months = ensureArray(data.month_counts);
+  const meta = normalizeMeta(entries, months, data.meta);
+
   renderEntries(entries);
   renderSparkline(months);
-  renderStats(entries, months);
-  setStatus("更新完了");
+  renderStats(entries, months, meta);
+
+  if (meta.generatedAt) {
+    setStatus(`更新完了 (${formatDateTime(meta.generatedAt)})`);
+  } else {
+    setStatus("更新完了");
+  }
 };
 
 const handleLoadError = (err) => {

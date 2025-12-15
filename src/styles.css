@@ -133,7 +133,7 @@ header {
 }
 
 .stat-value {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.4px;
   display: flex;
@@ -198,7 +198,7 @@ header {
   align-items: center;
   gap: 10px;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: 0.2px;
 }
 
