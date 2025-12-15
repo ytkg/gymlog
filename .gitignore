@@ -3,6 +3,7 @@ node_modules/
 
 # Cloudflare Wrangler
 .wrangler/
+dist/
 
 # Logs
 npm-debug.log*
