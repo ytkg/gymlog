@@ -15,12 +15,12 @@ describe("parseEntries", () => {
       "",
       "## 2024-01-03",
       "baz",
-      ""
+      "",
     ].join("\n");
 
     expect(parseEntries(input)).toEqual([
       { date: "2024-01-02", body: "foo\nbar" },
-      { date: "2024-01-03", body: "baz" }
+      { date: "2024-01-03", body: "baz" },
     ]);
   });
 
@@ -29,4 +29,3 @@ describe("parseEntries", () => {
     expect(parseEntries(input)).toEqual([{ date: "2024-02-01", body: "a\nb" }]);
   });
 });
-

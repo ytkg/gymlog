@@ -35,4 +35,3 @@ export const fetchLogs = async () => {
 
   return data;
 };
-

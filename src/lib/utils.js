@@ -13,7 +13,7 @@ export const formatDateTime = (iso) =>
     weekday: "short",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 
 export const formatDate = (iso) =>
@@ -21,7 +21,7 @@ export const formatDate = (iso) =>
     month: "short",
     day: "numeric",
     weekday: "short",
-    year: "numeric"
+    year: "numeric",
   });
 
 export const monthLabel = (iso) => {
@@ -50,8 +50,7 @@ export const normalizeMeta = (entries, months, meta) => ({
   totalMonths: meta?.total_months ?? months.length,
   latestEntryDate: meta?.latest_entry_date ?? latestEntryDate(entries),
   generatedAt: meta?.generated_at ?? null,
-  source: meta?.source ?? "unknown"
+  source: meta?.source ?? "unknown",
 });
 
 export const ensureArray = (value) => (Array.isArray(value) ? value : []);
-

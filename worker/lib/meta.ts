@@ -1,4 +1,4 @@
-import { Entry, Meta, MonthCount } from "./types";
+import type { Entry, Meta, MonthCount } from "./types";
 
 export const buildMeta = (entries: Entry[], months: MonthCount[], source: string): Meta => {
   const latestEntryDate =
@@ -9,6 +9,6 @@ export const buildMeta = (entries: Entry[], months: MonthCount[], source: string
     total_months: months.length,
     latest_entry_date: latestEntryDate,
     source,
-    generated_at: new Date().toISOString()
+    generated_at: new Date().toISOString(),
   };
 };

@@ -1,7 +1,7 @@
-import { state } from "./lib/state.js";
 import { fetchLogs } from "./lib/api.js";
 import { handleLoadError } from "./lib/errors.js";
 import { renderAll } from "./lib/render.js";
+import { state } from "./lib/state.js";
 import { setStatus, showHint } from "./lib/ui.js";
 
 const init = async () => {

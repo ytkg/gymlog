@@ -5,6 +5,5 @@ export const dom = {
   sparklineStatus: document.getElementById("sparkline-status"),
   sparklineCanvas: document.getElementById("recent-chart"),
   sparklineEmpty: document.getElementById("sparkline-empty"),
-  hint: document.getElementById("hint")
+  hint: document.getElementById("hint"),
 };
-

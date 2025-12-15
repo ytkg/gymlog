@@ -13,4 +13,3 @@ export const setEntriesMessage = (message) => {
   if (!dom.entries) return;
   dom.entries.innerHTML = `<div class="empty">${escapeHtml(message).replace(/\n/g, "<br>")}</div>`;
 };
-

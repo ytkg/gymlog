@@ -1,8 +1,16 @@
-import { dom } from "./dom.js";
-import { MONTHLY_FEE } from "./constants.js";
 import { hideChart, renderSparkline } from "./chart.js";
+import { MONTHLY_FEE } from "./constants.js";
+import { dom } from "./dom.js";
 import { setStatus } from "./ui.js";
-import { currentMonthKey, ensureArray, formatDate, formatDateTime, monthLabel, normalizeMeta, yen } from "./utils.js";
+import {
+  currentMonthKey,
+  ensureArray,
+  formatDate,
+  formatDateTime,
+  monthLabel,
+  normalizeMeta,
+  yen,
+} from "./utils.js";
 
 export const renderEntries = (entries) => {
   if (!dom.entries) return;
@@ -94,4 +102,3 @@ export const clearViewsForError = () => {
   if (dom.stats) dom.stats.innerHTML = "";
   hideChart("読み込みエラー");
 };
-

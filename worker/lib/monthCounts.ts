@@ -1,4 +1,4 @@
-import { Entry, MonthCount } from "./types";
+import type { Entry, MonthCount } from "./types";
 
 export const monthCounts = (entries: Entry[]): MonthCount[] => {
   const counts: Record<string, number> = {};

@@ -1,4 +1,4 @@
-import { Entry } from "./types";
+import type { Entry } from "./types";
 
 const HEADING_REGEX = /^\s*#+\s*(\d{4}-\d{2}-\d{2})\s*$/;
 

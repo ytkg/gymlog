@@ -1,6 +1,6 @@
+import { hideChart } from "./chart.js";
 import { dom } from "./dom.js";
 import { state } from "./state.js";
-import { hideChart } from "./chart.js";
 import { setEntriesMessage, setStatus, showHint } from "./ui.js";
 
 export const handleLoadError = (err) => {
@@ -37,4 +37,3 @@ export const handleLoadError = (err) => {
   setStatus(statusText);
   if (shouldShowHint) showHint();
 };
-

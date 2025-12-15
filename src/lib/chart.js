@@ -1,6 +1,6 @@
+import { CHART_LIMIT, MONTHLY_FEE } from "./constants.js";
 import { dom } from "./dom.js";
 import { state } from "./state.js";
-import { CHART_LIMIT, MONTHLY_FEE } from "./constants.js";
 import { ensureArray, monthLabel, yen } from "./utils.js";
 
 const destroyChart = () => {
@@ -40,7 +40,7 @@ const buildChartConfig = (labels, counts, prices) => ({
         borderColor: "transparent",
         backgroundColor: "rgba(29, 211, 176, 0.7)",
         borderRadius: 6,
-        yAxisID: "yCounts"
+        yAxisID: "yCounts",
       },
       {
         label: "1回あたり価格",
@@ -52,21 +52,21 @@ const buildChartConfig = (labels, counts, prices) => ({
         pointBackgroundColor: "#0a1021",
         pointBorderColor: "#f4a949",
         spanGaps: true,
-        yAxisID: "yPrice"
-      }
-    ]
+        yAxisID: "yPrice",
+      },
+    ],
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
       mode: "index",
-      intersect: false
+      intersect: false,
     },
     scales: {
       x: {
         ticks: { color: "#e8eef8" },
-        grid: { color: "rgba(255, 255, 255, 0.08)" }
+        grid: { color: "rgba(255, 255, 255, 0.08)" },
       },
       yCounts: {
         position: "left",
@@ -74,30 +74,30 @@ const buildChartConfig = (labels, counts, prices) => ({
           color: "#e8eef8",
           stepSize: 1,
           precision: 0,
-          callback: (value) => Math.round(value)
+          callback: (value) => Math.round(value),
         },
         grid: { color: "rgba(255, 255, 255, 0.1)" },
         title: { display: true, text: "回数", color: "#e8eef8" },
         beginAtZero: true,
         min: 0,
-        suggestedMin: 0
+        suggestedMin: 0,
       },
       yPrice: {
         position: "right",
         ticks: {
           color: "#e8eef8",
-          callback: (value) => yen(value)
+          callback: (value) => yen(value),
         },
         grid: { drawOnChartArea: false, color: "rgba(255, 255, 255, 0.12)" },
         title: { display: true, text: "円/回", color: "#e8eef8" },
         beginAtZero: true,
         min: 0,
-        suggestedMin: 0
-      }
+        suggestedMin: 0,
+      },
     },
     plugins: {
       legend: {
-        labels: { color: "#e8eef8" }
+        labels: { color: "#e8eef8" },
       },
       tooltip: {
         callbacks: {
@@ -106,11 +106,11 @@ const buildChartConfig = (labels, counts, prices) => ({
               return `${ctx.dataset.label}: ${yen(ctx.parsed.y)}`;
             }
             return `${ctx.dataset.label}: ${ctx.parsed.y} 回`;
-          }
-        }
-      }
-    }
-  }
+          },
+        },
+      },
+    },
+  },
 });
 
 export const renderSparkline = (months) => {
@@ -148,4 +148,3 @@ export const renderSparkline = (months) => {
   state.chart = new Chart(ctx, buildChartConfig(labels, counts, prices));
   if (dom.sparklineStatus) dom.sparklineStatus.textContent = `${sorted.length} か月表示`;
 };
-

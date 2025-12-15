@@ -12,13 +12,12 @@ describe("monthCounts", () => {
       { date: "2024-02-01", body: "" },
       { date: "2024-01-31", body: "" },
       { date: "2024-02-10", body: "" },
-      { date: "2024-01-01", body: "" }
+      { date: "2024-01-01", body: "" },
     ];
 
     expect(monthCounts(entries)).toEqual([
       { date: "2024-01-01", count: 2 },
-      { date: "2024-02-01", count: 2 }
+      { date: "2024-02-01", count: 2 },
     ]);
   });
 });
-
