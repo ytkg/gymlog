@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --remote"
+    "dev": "wrangler dev --remote",
+    "test": "vitest run"
   },
   "dependencies": {
     "hono": "^4.11.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241112.0",
+    "vitest": "^3.2.4",
     "wrangler": "^4.54.0"
   }
 }
