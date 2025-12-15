@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { buildMeta } from "./lib/meta";
 import { monthCounts } from "./lib/monthCounts";
 import { parseEntries } from "./lib/parseEntries";
@@ -10,18 +11,43 @@ type Bindings = {
 
 const LOG_KEY = "ジム記録/logs.md";
 
-const app = new Hono<{ Bindings: Bindings }>();
+type AppEnv = { Bindings: Bindings };
+const app = new Hono<AppEnv>();
+
+const jsonError = (c: Context<AppEnv>, status: number, code: string, message: string) =>
+  c.json({ error: { message, code } }, status);
 
 app.get("/api/logs.json", async (c) => {
-  const object = await c.env.OBSIDIAN.get(LOG_KEY);
-  if (!object) return c.json({ error: "logs.md not found" }, 404);
+  let object: R2ObjectBody | null;
+  try {
+    object = await c.env.OBSIDIAN.get(LOG_KEY);
+  } catch (err) {
+    console.error("R2 get failed", err);
+    return jsonError(c, 500, "R2_GET_FAILED", `R2 から ${LOG_KEY} を取得できませんでした`);
+  }
 
-  const bodyText = await object.text();
-  const entries = parseEntries(bodyText);
-  const months = monthCounts(entries);
-  const meta = buildMeta(entries, months, LOG_KEY);
+  if (!object) {
+    return jsonError(c, 404, "LOGS_NOT_FOUND", `R2 に ${LOG_KEY} が見つかりません`);
+  }
 
-  return c.json({ entries, month_counts: months, meta });
+  let bodyText: string;
+  try {
+    bodyText = await object.text();
+  } catch (err) {
+    console.error("R2 read failed", err);
+    return jsonError(c, 500, "R2_READ_FAILED", `R2 の ${LOG_KEY} の読み込みに失敗しました`);
+  }
+
+  try {
+    const entries = parseEntries(bodyText);
+    const months = monthCounts(entries);
+    const meta = buildMeta(entries, months, LOG_KEY);
+
+    return c.json({ entries, month_counts: months, meta });
+  } catch (err) {
+    console.error("logs processing failed", err);
+    return jsonError(c, 500, "INTERNAL_ERROR", "ログの処理中にエラーが発生しました");
+  }
 });
 
 app.get("*", async (c) => {

@@ -24,6 +24,19 @@ const showHint = () => {
   if (dom.hint) dom.hint.hidden = false;
 };
 
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const setEntriesMessage = (message) => {
+  if (!dom.entries) return;
+  dom.entries.innerHTML = `<div class="empty">${escapeHtml(message).replace(/\n/g, "<br>")}</div>`;
+};
+
 const formatDateTime = (iso) =>
   new Date(iso).toLocaleString("ja-JP", {
     month: "short",
@@ -307,26 +320,81 @@ const renderAll = (data) => {
 
 const handleLoadError = (err) => {
   console.error(err);
-  if (dom.entries) {
-    dom.entries.innerHTML = '<div class="empty">データの取得に失敗しました。<br>logs.json が存在するか確認してください。</div>';
+  const status = typeof err?.status === "number" ? err.status : null;
+  const code = typeof err?.code === "string" ? err.code : null;
+
+  let message = "データの取得に失敗しました。";
+  let statusText = "読み込みエラー";
+  let shouldShowHint = state.isFile;
+
+  if (status === 404 && code === "LOGS_NOT_FOUND") {
+    statusText = "エラー (404 / LOGS_NOT_FOUND)";
+    message = `ログファイルが見つかりません。\n${err.message}`;
+  } else if (status === 404) {
+    statusText = "エラー (404)";
+    message = "API が見つかりません。\nWorker を起動してアクセスしてください（npm run dev）。";
+    shouldShowHint = true;
+  } else if (status && status >= 500) {
+    statusText = `エラー (${status}${code ? ` / ${code}` : ""})`;
+    message = `サーバーエラーが発生しました。\n${err.message || "時間をおいて再度お試しください。"}`;
+  } else if (code === "NETWORK_ERROR") {
+    statusText = "エラー (NETWORK)";
+    message = "API に接続できませんでした。\nWorker の起動状況とネットワークを確認してください。";
+    shouldShowHint = true;
+  } else if (status) {
+    statusText = `エラー (HTTP ${status}${code ? ` / ${code}` : ""})`;
+    message = `${message}\n${err.message || ""}`.trim();
   }
+
+  setEntriesMessage(message);
   if (dom.stats) dom.stats.innerHTML = "";
-  hideChart("データなし");
-  setStatus("読み込みエラー");
-  if (state.isFile) showHint();
+  hideChart("読み込みエラー");
+  setStatus(statusText);
+  if (shouldShowHint) showHint();
 };
 
 const fetchLogs = async () => {
   const apiPath = "/api/logs.json";
-  const res = await fetch(apiPath, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  let res;
+  try {
+    res = await fetch(apiPath, { cache: "no-store" });
+  } catch (cause) {
+    const err = new Error("fetch failed");
+    err.code = "NETWORK_ERROR";
+    err.cause = cause;
+    throw err;
+  }
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (_) {
+    data = null;
+  }
+
+  if (!res.ok) {
+    const errorMessage = typeof data?.error === "string" ? data.error : data?.error?.message;
+    const errorCode = typeof data?.error === "string" ? null : data?.error?.code;
+    const err = new Error(errorMessage || `HTTP ${res.status}`);
+    err.status = res.status;
+    err.code = errorCode || null;
+    throw err;
+  }
+
+  if (!data) {
+    const err = new Error("API の応答が不正です");
+    err.status = res.status;
+    err.code = "INVALID_RESPONSE";
+    throw err;
+  }
+
+  return data;
 };
 
 const init = async () => {
   if (state.isFile) {
     showHint();
-    setStatus("ローカル閲覧には簡易サーバーが必要です");
+    setStatus("ローカル閲覧には Worker の起動が必要です");
   }
 
   try {
