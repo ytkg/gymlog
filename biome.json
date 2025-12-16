@@ -31,5 +31,8 @@
     "formatter": {
       "enabled": true
     }
+  },
+  "files": {
+    "includes": ["**", "!!**/src/vendor"]
   }
 }

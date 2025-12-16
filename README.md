@@ -69,3 +69,9 @@ npm test   # Vitest
 npm run check  # Biome（lint+format+organize imports）
 ```
 
+## 外部依存（Chart.js / Google Fonts）
+
+- フロントの Chart.js は `src/vendor/chart.umd.js` に同梱しています（npm の `chart.js` 由来）
+- Google Fonts は使用せず、システムフォントを利用します
+
+この方針により、CSP を厳格化しやすくなります（例: `script-src 'self'` / `style-src 'self'` など）。
