@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import { cache } from "hono/cache";
+import { etag } from "hono/etag";
 import { CACHE_CONTROL_REVALIDATE } from "./lib/httpCache";
 import { createLogsHandler } from "./usecases/logsApi";
 
@@ -12,9 +14,13 @@ const app = new Hono<AppEnv>();
 
 const LOG_KEY = "ジム記録/logs.md";
 const CACHE_CONTROL = CACHE_CONTROL_REVALIDATE;
+const EDGE_CACHE_NAME = "gymlog-api";
+const EDGE_CACHE_CONTROL = "s-maxage=60";
 
 app.get(
   "/api/logs.json",
+  etag(),
+  cache({ cacheName: EDGE_CACHE_NAME, cacheControl: EDGE_CACHE_CONTROL }),
   createLogsHandler<AppEnv>({ logKey: LOG_KEY, cacheControl: CACHE_CONTROL })
 );
 
