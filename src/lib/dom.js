@@ -1,6 +1,12 @@
 export const dom = {
   entries: document.getElementById("entries"),
   stats: document.getElementById("stats"),
+  entriesSummary: document.getElementById("entries-summary"),
+  months: document.getElementById("months"),
+  monthsNote: document.getElementById("months-note"),
+  search: document.getElementById("entry-search"),
+  monthFilter: document.getElementById("month-filter"),
+  clearFilters: document.getElementById("clear-filters"),
   status: document.querySelector("[data-status]"),
   sparklineStatus: document.getElementById("sparkline-status"),
   sparklineCanvas: document.getElementById("recent-chart"),
