@@ -5,7 +5,7 @@ import {
   R2ReadFailedError,
   readObjectText,
 } from "../infra/r2Object";
-import { cacheHeaders, ifNoneMatchHasEtag } from "../lib/httpCache";
+import { cacheHeaders } from "../lib/httpCache";
 import { buildMeta } from "../lib/meta";
 import { monthCounts } from "../lib/monthCounts";
 import { parseEntries } from "../lib/parseEntries";
@@ -30,9 +30,6 @@ export const createLogsHandler =
       }
 
       const etag = object.etag || null;
-      if (etag && ifNoneMatchHasEtag(c.req.header("if-none-match"), etag)) {
-        return c.body(null, 304, cacheHeaders(opts.cacheControl, etag));
-      }
 
       const bodyText = await readObjectText(object, opts.logKey);
       const entries = parseEntries(bodyText);
