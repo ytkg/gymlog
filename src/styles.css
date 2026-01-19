@@ -511,6 +511,18 @@ header {
     align-items: stretch;
   }
 
+  .field input,
+  .field select,
+  .output {
+    font-size: 16px;
+  }
+
+  .field input,
+  .field select {
+    min-height: 44px;
+    line-height: 1.4;
+  }
+
   .three-col {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
