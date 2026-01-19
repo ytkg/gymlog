@@ -28,6 +28,13 @@ app.get("*", async (c) => {
   const { ASSETS } = c.env;
   const request = c.req.raw;
   const accept = c.req.header("accept") || "";
+  const url = new URL(c.req.url);
+
+  if (url.pathname === "/editor" || url.pathname === "/editor/") {
+    const editorRequest = new Request(new URL("/editor.html", url), request);
+    const editorResponse = await ASSETS.fetch(editorRequest);
+    if (editorResponse.status !== 404) return editorResponse;
+  }
 
   // 静的アセット優先
   const assetResponse = await ASSETS.fetch(request);
@@ -35,7 +42,6 @@ app.get("*", async (c) => {
 
   // SPAフォールバック: HTML要求のみindex.htmlを返す
   if (accept.includes("text/html")) {
-    const url = new URL(c.req.url);
     const indexRequest = new Request(new URL("/index.html", url), request);
     const htmlResponse = await ASSETS.fetch(indexRequest);
     if (htmlResponse.status !== 404) return htmlResponse;
