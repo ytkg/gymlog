@@ -460,3 +460,68 @@ header {
   line-height: 1.5;
   resize: vertical;
 }
+
+@media (max-width: 720px) {
+  .page {
+    padding: 16px 12px 24px;
+  }
+
+  .title {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 26px;
+  }
+
+  .panel {
+    padding: 14px 14px 12px;
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .sparkline {
+    min-height: 180px;
+  }
+
+  .sparkline canvas {
+    height: 180px;
+  }
+
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .item-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .three-col {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .set-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    gap: 8px;
+  }
+
+  .set-add {
+    justify-content: stretch;
+  }
+}
