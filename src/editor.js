@@ -432,7 +432,7 @@ const copyMarkdown = async () => {
   try {
     await navigator.clipboard.writeText(text);
     setStatus("コピーしました");
-  } catch (err) {
+  } catch (_err) {
     dom.markdownOutput.select();
     document.execCommand("copy");
     setStatus("コピーしました");
