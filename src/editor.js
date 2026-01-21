@@ -3,6 +3,7 @@ const MAX_SETS = 10;
 const DEFAULT_REPS = "10";
 const DEFAULT_SETS = "3";
 const DEFAULT_SET = { weight: "", reps: DEFAULT_REPS, sets: DEFAULT_SETS };
+const STORAGE_KEY = "gymlog-editor-state";
 const BASE_WEIGHT_OPTIONS = ["", "自重"];
 const BASE_EXERCISE_OPTIONS = [
   "種目を選択",
@@ -43,6 +44,33 @@ const copyButton = document.getElementById("copy");
 
 const setStatus = (text) => {
   if (statusLabel) statusLabel.textContent = text;
+};
+
+const saveState = () => {
+  const payload = {
+    date: dateInput.value,
+    items,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+};
+
+const loadState = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      if (typeof parsed.date === "string") {
+        dateInput.value = parsed.date;
+      }
+      if (Array.isArray(parsed.items)) {
+        items.splice(0, items.length, ...parsed.items);
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const formatToday = () => {
@@ -275,6 +303,7 @@ const renderItems = () => {
     .join("");
 
   updateMarkdown();
+  saveState();
 };
 
 const addSet = () => {
@@ -374,10 +403,18 @@ setWeightOptions(BASE_WEIGHT_OPTIONS);
 setExerciseOptions(BASE_EXERCISE_OPTIONS);
 dateInput.value = formatToday();
 loadWeightOptionsFromLogs();
+if (!loadState()) {
+  dateInput.value = formatToday();
+}
+renderItems();
 
 addSetButton.addEventListener("click", addSet);
 addNoteButton.addEventListener("click", addNote);
 copyButton.addEventListener("click", copyMarkdown);
+dateInput.addEventListener("input", () => {
+  updateMarkdown();
+  saveState();
+});
 itemsContainer.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
@@ -408,5 +445,3 @@ itemsContainer.addEventListener("input", (event) => {
   if (!index || !field) return;
   updateItemField(Number(index), field, target.value, setIndex ? Number(setIndex) : null);
 });
-
-renderItems();
