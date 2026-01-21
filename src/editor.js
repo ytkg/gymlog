@@ -229,7 +229,10 @@ const buildMarkdown = () => {
   return lines.join("\n");
 };
 
-const renderNoteItem = (item, index) => `<div class="item-row">
+const renderNoteItem = (item, index) => `<div class="item-row" data-index="${index}">
+  <button class="drag-handle" type="button" draggable="true" aria-label="並べ替え">
+    <span aria-hidden="true">⋮⋮</span>
+  </button>
   <div class="item-fields">
     <div class="field compact">
       <label>メモ</label>
@@ -279,7 +282,11 @@ const renderTreadmillSet = (index, set, setIndex) => `
   </div>
 `;
 
-const renderTreadmillItem = (item, index) => `<div class="item-row">
+const renderTreadmillItem = (item, index) =>
+  `<div class="item-row" data-index="${index}">
+  <button class="drag-handle" type="button" draggable="true" aria-label="並べ替え">
+    <span aria-hidden="true">⋮⋮</span>
+  </button>
   <div class="item-fields">
     <div class="field compact">
       <label>種目</label>
@@ -303,7 +310,10 @@ const renderTreadmillItem = (item, index) => `<div class="item-row">
   <button class="btn tiny ghost" data-remove-item="${index}" type="button">削除</button>
 </div>`;
 
-const renderExerciseItem = (item, index) => `<div class="item-row">
+const renderExerciseItem = (item, index) => `<div class="item-row" data-index="${index}">
+  <button class="drag-handle" type="button" draggable="true" aria-label="並べ替え">
+    <span aria-hidden="true">⋮⋮</span>
+  </button>
   <div class="item-fields">
     <div class="field compact">
       <label>種目</label>
@@ -494,6 +504,57 @@ const handleItemsInput = (event) => {
   updateItemField(Number(index), field, target.value, setIndex ? Number(setIndex) : null);
 };
 
+const handleDragStart = (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const handle = target.closest(".drag-handle");
+  if (!handle || !event.dataTransfer) return;
+  const row = handle.closest(".item-row");
+  if (!row) return;
+  const index = row.getAttribute("data-index");
+  if (!index) return;
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", index);
+  row.classList.add("is-dragging");
+};
+
+const handleDragEnd = (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const row = target.closest(".item-row");
+  if (!row) return;
+  row.classList.remove("is-dragging");
+};
+
+const handleDragOver = (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const row = target.closest(".item-row");
+  if (!row) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+};
+
+const moveItem = (fromIndex, toIndex) => {
+  if (fromIndex === toIndex) return;
+  const item = state.items.splice(fromIndex, 1)[0];
+  state.items.splice(toIndex, 0, item);
+  renderItems();
+  setStatus("並べ替えました");
+};
+
+const handleDrop = (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const row = target.closest(".item-row");
+  if (!row) return;
+  event.preventDefault();
+  const toIndex = Number(row.getAttribute("data-index"));
+  const fromIndex = Number(event.dataTransfer?.getData("text/plain"));
+  if (Number.isNaN(fromIndex) || Number.isNaN(toIndex)) return;
+  moveItem(fromIndex, toIndex);
+};
+
 const toggleExerciseFields = () => {
   const isTreadmill = dom.exerciseSelect.value === TREADMILL_EXERCISE;
   if (dom.strengthFields) dom.strengthFields.classList.toggle("is-hidden", isTreadmill);
@@ -520,6 +581,10 @@ const init = () => {
   dom.exerciseSelect.addEventListener("change", toggleExerciseFields);
   dom.itemsContainer.addEventListener("click", handleItemsClick);
   dom.itemsContainer.addEventListener("input", handleItemsInput);
+  dom.itemsContainer.addEventListener("dragstart", handleDragStart);
+  dom.itemsContainer.addEventListener("dragend", handleDragEnd);
+  dom.itemsContainer.addEventListener("dragover", handleDragOver);
+  dom.itemsContainer.addEventListener("drop", handleDrop);
   toggleExerciseFields();
 };
 

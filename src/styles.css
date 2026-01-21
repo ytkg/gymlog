@@ -411,6 +411,35 @@ header {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
+  position: relative;
+}
+
+.item-row.is-dragging {
+  opacity: 0.5;
+}
+
+.drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-handle span {
+  letter-spacing: -1px;
+  font-size: 14px;
 }
 
 .item-fields {
@@ -521,6 +550,12 @@ header {
   .item-row {
     grid-template-columns: 1fr;
     align-items: stretch;
+    padding-top: 38px;
+  }
+
+  .drag-handle {
+    top: 6px;
+    right: 6px;
   }
 
   .field input,
