@@ -1,23 +1,25 @@
-const MAX_REPS = 20;
-const MAX_SETS = 10;
-const DEFAULT_REPS = "10";
-const DEFAULT_SETS = "3";
 import {
   BASE_EXERCISE_OPTIONS,
   BASE_WEIGHT_OPTIONS,
+  BENCH_PRESS_WEIGHT_OPTIONS,
   DURATION_OPTIONS,
   SPEED_OPTIONS,
 } from "./editorOptions.js";
 
+const MAX_REPS = 20;
+const MAX_SETS = 10;
+const DEFAULT_REPS = "10";
+const DEFAULT_SETS = "3";
+
 const DEFAULT_SET = { weight: "", reps: DEFAULT_REPS, sets: DEFAULT_SETS };
 const STORAGE_KEY = "gymlog-editor-state";
 const TREADMILL_EXERCISE = "トレッドミル";
+const BENCH_PRESS_EXERCISE = "ベンチプレス";
 const DEFAULT_TREADMILL_DURATION = "20";
 const DEFAULT_TREADMILL_SPEED = "4.5";
 
 const state = {
   items: [],
-  weightOptions: [...BASE_WEIGHT_OPTIONS],
   exerciseOptions: [...BASE_EXERCISE_OPTIONS],
 };
 
@@ -150,42 +152,27 @@ const formatWeight = (value) => {
   return `${trimmed}kg`;
 };
 
-const weightSortKey = (value) => {
-  if (!value) return { group: 0, num: 0, text: "" };
-  if (value === "自重") return { group: 1, num: 0, text: value };
-  if (value.startsWith("体重-")) {
-    const num = Number.parseFloat(value.replace(/[^\d.]/g, ""));
-    return { group: 2, num: Number.isNaN(num) ? 0 : num, text: value };
-  }
-  const num = Number.parseFloat(value);
-  return { group: 3, num: Number.isNaN(num) ? 0 : num, text: value };
+const ensureOptionValue = (values, selectedValue) => {
+  if (!selectedValue) return values;
+  return values.includes(selectedValue) ? values : [...values, selectedValue];
 };
 
-const sortWeights = (values) =>
-  values.slice().sort((a, b) => {
-    const keyA = weightSortKey(a);
-    const keyB = weightSortKey(b);
-    if (keyA.group !== keyB.group) return keyA.group - keyB.group;
-    if (keyA.num !== keyB.num) return keyA.num - keyB.num;
-    return keyA.text.localeCompare(keyB.text);
-  });
+const weightOptionsForExercise = (exercise) =>
+  exercise === BENCH_PRESS_EXERCISE ? BENCH_PRESS_WEIGHT_OPTIONS : BASE_WEIGHT_OPTIONS;
 
 const buildOptions = (values, selectedValue, labelFor) =>
-  values
+  ensureOptionValue(values, selectedValue)
     .map((optionValue) => {
       const selected = optionValue === selectedValue ? " selected" : "";
       return `<option value="${optionValue}"${selected}>${labelFor(optionValue)}</option>`;
     })
     .join("");
 
-const updateWeightSelect = () => {
+const updateWeightSelectForExercise = (exercise) => {
   const currentValue = dom.weightSelect.value;
-  dom.weightSelect.innerHTML = buildOptions(
-    state.weightOptions,
-    currentValue,
-    (value) => value || "重量なし"
-  );
-  if (state.weightOptions.includes(currentValue)) {
+  const options = weightOptionsForExercise(exercise);
+  dom.weightSelect.innerHTML = buildOptions(options, currentValue, (value) => value || "重量なし");
+  if (options.includes(currentValue)) {
     dom.weightSelect.value = currentValue;
   }
 };
@@ -200,11 +187,6 @@ const updateExerciseSelect = () => {
   if (state.exerciseOptions.includes(currentValue)) {
     dom.exerciseSelect.value = currentValue;
   }
-};
-
-const setWeightOptions = (options) => {
-  state.weightOptions = sortWeights(Array.from(new Set(options)));
-  updateWeightSelect();
 };
 
 const setExerciseOptions = (options) => {
@@ -257,12 +239,16 @@ const renderNoteItem = (item, index) => `<div class="item-row">
   <button class="btn tiny ghost" data-remove-item="${index}" type="button">削除</button>
 </div>`;
 
-const renderExerciseSet = (index, set, setIndex) => `
+const renderExerciseSet = (index, set, setIndex, exercise) => `
   <div class="set-row${setIndex === 0 ? "" : " no-labels"}">
     <div class="field compact">
       <label>重量</label>
       <select data-index="${index}" data-set="${setIndex}" data-field="weight" aria-label="重量">
-        ${buildOptions(state.weightOptions, set.weight || "", (value) => value || "重量なし")}
+        ${buildOptions(
+          weightOptionsForExercise(exercise),
+          set.weight || "",
+          (value) => value || "重量なし"
+        )}
       </select>
     </div>
     <div class="field compact">
@@ -326,7 +312,9 @@ const renderExerciseItem = (item, index) => `<div class="item-row">
       </select>
     </div>
     <div class="set-list">
-      ${item.sets.map((set, setIndex) => renderExerciseSet(index, set, setIndex)).join("")}
+      ${item.sets
+        .map((set, setIndex) => renderExerciseSet(index, set, setIndex, item.exercise))
+        .join("")}
     </div>
     <div class="set-add">
       <button class="btn tiny primary" data-add-set="${index}" type="button">セットを追加</button>
@@ -510,6 +498,7 @@ const toggleExerciseFields = () => {
   const isTreadmill = dom.exerciseSelect.value === TREADMILL_EXERCISE;
   if (dom.strengthFields) dom.strengthFields.classList.toggle("is-hidden", isTreadmill);
   if (dom.treadmillFields) dom.treadmillFields.classList.toggle("is-hidden", !isTreadmill);
+  updateWeightSelectForExercise(dom.exerciseSelect.value);
 };
 
 const init = () => {
@@ -517,7 +506,6 @@ const init = () => {
   initSelectRange(dom.setsSelect, MAX_SETS, Number(DEFAULT_SETS));
   initSelectOptions(dom.durationSelect, DURATION_OPTIONS, DEFAULT_TREADMILL_DURATION);
   initSelectOptions(dom.speedSelect, SPEED_OPTIONS, DEFAULT_TREADMILL_SPEED);
-  setWeightOptions(BASE_WEIGHT_OPTIONS);
   setExerciseOptions(BASE_EXERCISE_OPTIONS);
   dom.dateInput.value = formatToday();
   if (!loadState()) {

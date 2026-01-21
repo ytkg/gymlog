@@ -34,6 +34,31 @@ export const BASE_WEIGHT_OPTIONS = [
   "140kg",
 ];
 
+export const BENCH_PRESS_WEIGHT_OPTIONS = [
+  "",
+  "20kg",
+  "22.5kg",
+  "25kg",
+  "27.5kg",
+  "30kg",
+  "32.5kg",
+  "35kg",
+  "37.5kg",
+  "40kg",
+  "42.5kg",
+  "45kg",
+  "47.5kg",
+  "50kg",
+  "52.5kg",
+  "55kg",
+  "57.5kg",
+  "60kg",
+  "62.5kg",
+  "65kg",
+  "67.5kg",
+  "70kg",
+];
+
 export const BASE_EXERCISE_OPTIONS = [
   "種目を選択",
   "ベンチプレス",
