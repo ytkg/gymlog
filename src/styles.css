@@ -426,6 +426,10 @@ header {
   font-size: 11px;
 }
 
+.is-hidden {
+  display: none !important;
+}
+
 .set-list {
   display: grid;
   gap: 8px;
@@ -436,6 +440,10 @@ header {
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 8px;
   align-items: end;
+}
+
+.set-row.is-treadmill {
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .set-row.no-labels label {
