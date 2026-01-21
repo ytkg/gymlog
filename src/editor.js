@@ -2,33 +2,18 @@ const MAX_REPS = 20;
 const MAX_SETS = 10;
 const DEFAULT_REPS = "10";
 const DEFAULT_SETS = "3";
+import {
+  BASE_EXERCISE_OPTIONS,
+  BASE_WEIGHT_OPTIONS,
+  DURATION_OPTIONS,
+  SPEED_OPTIONS,
+} from "./editorOptions.js";
+
 const DEFAULT_SET = { weight: "", reps: DEFAULT_REPS, sets: DEFAULT_SETS };
 const STORAGE_KEY = "gymlog-editor-state";
-const BASE_WEIGHT_OPTIONS = ["", "自重"];
-const BASE_EXERCISE_OPTIONS = [
-  "種目を選択",
-  "ベンチプレス",
-  "スクワット",
-  "デッドリフト",
-  "レッグプレス",
-  "レッグエクステンション",
-  "ラットプルダウン",
-  "ラットプルダウンロー",
-  "チンニング",
-  "バイセップスカール",
-  "チェストプレス",
-  "アブドミナル",
-  "トーソローテーション",
-  "スミスマシン",
-  "エアロバイク",
-  "トレッドミル",
-];
-const WEIGHT_MATCH = /(?:\(?体重-\d+(?:\.\d+)?\)?kg|\d+(?:\.\d+)?kg|自重)/g;
 const TREADMILL_EXERCISE = "トレッドミル";
 const DEFAULT_TREADMILL_DURATION = "20";
 const DEFAULT_TREADMILL_SPEED = "4.5";
-const DURATION_OPTIONS = ["5", "8", "10", "15", "20", "30"];
-const SPEED_OPTIONS = ["3.0", "4.0", "4.5", "5.0", "5.4", "5.5", "6.0", "8.0"];
 
 const state = {
   items: [],
@@ -165,16 +150,6 @@ const formatWeight = (value) => {
   return `${trimmed}kg`;
 };
 
-const normalizeWeightToken = (value) => {
-  const trimmed = value.trim().replace(/[()（）\s]/g, "");
-  if (!trimmed) return null;
-  if (trimmed === "自重") return trimmed;
-  if (trimmed.startsWith("体重-") && !trimmed.endsWith("kg")) {
-    return `${trimmed}kg`;
-  }
-  return trimmed;
-};
-
 const weightSortKey = (value) => {
   if (!value) return { group: 0, num: 0, text: "" };
   if (value === "自重") return { group: 1, num: 0, text: value };
@@ -235,28 +210,6 @@ const setWeightOptions = (options) => {
 const setExerciseOptions = (options) => {
   state.exerciseOptions = Array.from(new Set(options));
   updateExerciseSelect();
-};
-
-const loadWeightOptionsFromLogs = async () => {
-  try {
-    const res = await fetch("/api/logs.json", { cache: "no-store" });
-    if (!res.ok) return;
-    const data = await res.json();
-    const entries = Array.isArray(data?.entries) ? data.entries : [];
-    const weights = new Set(BASE_WEIGHT_OPTIONS);
-    for (const entry of entries) {
-      const body = typeof entry?.body === "string" ? entry.body : "";
-      const matches = body.match(WEIGHT_MATCH) || [];
-      for (const match of matches) {
-        const normalized = normalizeWeightToken(match);
-        if (normalized) weights.add(normalized);
-      }
-    }
-    setWeightOptions(Array.from(weights));
-    renderItems();
-  } catch {
-    setWeightOptions(BASE_WEIGHT_OPTIONS);
-  }
 };
 
 const updateMarkdown = () => {
@@ -567,7 +520,6 @@ const init = () => {
   setWeightOptions(BASE_WEIGHT_OPTIONS);
   setExerciseOptions(BASE_EXERCISE_OPTIONS);
   dom.dateInput.value = formatToday();
-  loadWeightOptionsFromLogs();
   if (!loadState()) {
     dom.dateInput.value = formatToday();
   }
