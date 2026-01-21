@@ -3,12 +3,15 @@ const MAX_SETS = 10;
 const DEFAULT_REPS = "10";
 const DEFAULT_SETS = "3";
 const DEFAULT_SET = { weight: "", reps: DEFAULT_REPS, sets: DEFAULT_SETS };
+const BASE_WEIGHT_OPTIONS = ["", "自重"];
+const WEIGHT_MATCH = /(?:\(?体重-\d+(?:\.\d+)?\)?kg|\d+(?:\.\d+)?kg|自重)/g;
+let weightOptionsList = [...BASE_WEIGHT_OPTIONS];
 
 const items = [];
 
 const dateInput = document.getElementById("date");
 const exerciseInput = document.getElementById("exercise");
-const weightInput = document.getElementById("weight");
+const weightSelect = document.getElementById("weight");
 const repsSelect = document.getElementById("reps");
 const setsSelect = document.getElementById("sets");
 const addSetButton = document.getElementById("add-set");
@@ -52,7 +55,88 @@ const formatWeight = (value) => {
   const trimmed = value.trim();
   if (!trimmed) return null;
   if (/kg/i.test(trimmed)) return trimmed;
+  if (trimmed.includes("体重") || trimmed.includes("自重")) return trimmed;
   return `${trimmed}kg`;
+};
+
+const normalizeWeightToken = (value) => {
+  const trimmed = value.trim().replace(/[()（）\s]/g, "");
+  if (!trimmed) return null;
+  if (trimmed === "自重") return trimmed;
+  if (trimmed.startsWith("体重-") && !trimmed.endsWith("kg")) {
+    return `${trimmed}kg`;
+  }
+  return trimmed;
+};
+
+const weightSortKey = (value) => {
+  if (!value) return { group: 0, num: 0, text: "" };
+  if (value === "自重") return { group: 1, num: 0, text: value };
+  if (value.startsWith("体重-")) {
+    const num = Number.parseFloat(value.replace(/[^\d.]/g, ""));
+    return { group: 2, num: Number.isNaN(num) ? 0 : num, text: value };
+  }
+  const num = Number.parseFloat(value);
+  return { group: 3, num: Number.isNaN(num) ? 0 : num, text: value };
+};
+
+const sortWeights = (values) =>
+  values.slice().sort((a, b) => {
+    const keyA = weightSortKey(a);
+    const keyB = weightSortKey(b);
+    if (keyA.group !== keyB.group) return keyA.group - keyB.group;
+    if (keyA.num !== keyB.num) return keyA.num - keyB.num;
+    return keyA.text.localeCompare(keyB.text);
+  });
+
+const initWeightSelect = (select) => {
+  for (const optionValue of weightOptionsList) {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionValue || "重量なし";
+    select.appendChild(option);
+  }
+};
+
+const weightOptions = (selectedValue) =>
+  weightOptionsList
+    .map((optionValue) => {
+      const selected = optionValue === selectedValue ? " selected" : "";
+      const label = optionValue || "重量なし";
+      return `<option value="${optionValue}"${selected}>${label}</option>`;
+    })
+    .join("");
+
+const setWeightOptions = (options) => {
+  weightOptionsList = sortWeights(Array.from(new Set(options)));
+  const currentValue = weightSelect.value;
+  weightSelect.innerHTML = "";
+  initWeightSelect(weightSelect);
+  if (weightOptionsList.includes(currentValue)) {
+    weightSelect.value = currentValue;
+  }
+};
+
+const loadWeightOptionsFromLogs = async () => {
+  try {
+    const res = await fetch("/api/logs.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const entries = Array.isArray(data?.entries) ? data.entries : [];
+    const weights = new Set(BASE_WEIGHT_OPTIONS);
+    for (const entry of entries) {
+      const body = typeof entry?.body === "string" ? entry.body : "";
+      const matches = body.match(WEIGHT_MATCH) || [];
+      for (const match of matches) {
+        const normalized = normalizeWeightToken(match);
+        if (normalized) weights.add(normalized);
+      }
+    }
+    setWeightOptions(Array.from(weights));
+    renderItems();
+  } catch {
+    setWeightOptions(BASE_WEIGHT_OPTIONS);
+  }
 };
 
 const updateMarkdown = () => {
@@ -98,7 +182,9 @@ const renderExerciseSet = (index, set, setIndex) => `
   <div class="set-row">
     <div class="field compact">
       <label>重量</label>
-      <input type="text" value="${set.weight || ""}" placeholder="例: 45" data-index="${index}" data-set="${setIndex}" data-field="weight">
+      <select data-index="${index}" data-set="${setIndex}" data-field="weight">
+        ${weightOptions(set.weight || "")}
+      </select>
     </div>
     <div class="field compact">
       <label>回数</label>
@@ -149,12 +235,12 @@ const addSet = () => {
     setStatus("種目を入力してください");
     return;
   }
-  const weight = weightInput.value.trim();
+  const weight = weightSelect.value;
   const reps = repsSelect.value;
   const sets = setsSelect.value;
   items.push({ type: "exercise", exercise, sets: [{ weight, reps, sets }] });
   exerciseInput.value = "";
-  weightInput.value = "";
+  weightSelect.value = "";
   renderItems();
   setStatus("種目を追加しました");
 };
@@ -236,7 +322,9 @@ const removeSet = (index, setIndex) => {
 
 initSelectRange(repsSelect, MAX_REPS, Number(DEFAULT_REPS));
 initSelectRange(setsSelect, MAX_SETS, Number(DEFAULT_SETS));
+setWeightOptions(BASE_WEIGHT_OPTIONS);
 dateInput.value = formatToday();
+loadWeightOptionsFromLogs();
 
 addSetButton.addEventListener("click", addSet);
 addNoteButton.addEventListener("click", addNote);
