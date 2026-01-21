@@ -243,22 +243,22 @@ const renderNoteItem = (item, index) => `<div class="item-row">
 </div>`;
 
 const renderExerciseSet = (index, set, setIndex) => `
-  <div class="set-row">
+  <div class="set-row${setIndex === 0 ? "" : " no-labels"}">
     <div class="field compact">
       <label>重量</label>
-      <select data-index="${index}" data-set="${setIndex}" data-field="weight">
+      <select data-index="${index}" data-set="${setIndex}" data-field="weight" aria-label="重量">
         ${buildOptions(state.weightOptions, set.weight || "", (value) => value || "重量なし")}
       </select>
     </div>
     <div class="field compact">
       <label>回数</label>
-      <select data-index="${index}" data-set="${setIndex}" data-field="reps">
+      <select data-index="${index}" data-set="${setIndex}" data-field="reps" aria-label="回数">
         ${optionsRange(MAX_REPS, set.reps)}
       </select>
     </div>
     <div class="field compact">
       <label>セット数</label>
-      <select data-index="${index}" data-set="${setIndex}" data-field="sets">
+      <select data-index="${index}" data-set="${setIndex}" data-field="sets" aria-label="セット数">
         ${optionsRange(MAX_SETS, set.sets)}
       </select>
     </div>
