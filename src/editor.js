@@ -4,13 +4,32 @@ const DEFAULT_REPS = "10";
 const DEFAULT_SETS = "3";
 const DEFAULT_SET = { weight: "", reps: DEFAULT_REPS, sets: DEFAULT_SETS };
 const BASE_WEIGHT_OPTIONS = ["", "自重"];
+const BASE_EXERCISE_OPTIONS = [
+  "種目を選択",
+  "ベンチプレス",
+  "スクワット",
+  "デッドリフト",
+  "レッグプレス",
+  "レッグエクステンション",
+  "ラットプルダウン",
+  "ラットプルダウンロー",
+  "チンニング",
+  "バイセップスカール",
+  "チェストプレス",
+  "アブドミナル",
+  "トーソローテーション",
+  "スミスマシン",
+  "エアロバイク",
+  "トレッドミル",
+];
 const WEIGHT_MATCH = /(?:\(?体重-\d+(?:\.\d+)?\)?kg|\d+(?:\.\d+)?kg|自重)/g;
 let weightOptionsList = [...BASE_WEIGHT_OPTIONS];
+let exerciseOptionsList = [...BASE_EXERCISE_OPTIONS];
 
 const items = [];
 
 const dateInput = document.getElementById("date");
-const exerciseInput = document.getElementById("exercise");
+const exerciseSelect = document.getElementById("exercise");
 const weightSelect = document.getElementById("weight");
 const repsSelect = document.getElementById("reps");
 const setsSelect = document.getElementById("sets");
@@ -117,6 +136,33 @@ const setWeightOptions = (options) => {
   }
 };
 
+const initExerciseSelect = (select) => {
+  for (const optionValue of exerciseOptionsList) {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionValue;
+    select.appendChild(option);
+  }
+};
+
+const exerciseOptions = (selectedValue) =>
+  exerciseOptionsList
+    .map((optionValue) => {
+      const selected = optionValue === selectedValue ? " selected" : "";
+      return `<option value="${optionValue}"${selected}>${optionValue}</option>`;
+    })
+    .join("");
+
+const setExerciseOptions = (options) => {
+  exerciseOptionsList = Array.from(new Set(options));
+  const currentValue = exerciseSelect.value;
+  exerciseSelect.innerHTML = "";
+  initExerciseSelect(exerciseSelect);
+  if (exerciseOptionsList.includes(currentValue)) {
+    exerciseSelect.value = currentValue;
+  }
+};
+
 const loadWeightOptionsFromLogs = async () => {
   try {
     const res = await fetch("/api/logs.json", { cache: "no-store" });
@@ -206,7 +252,9 @@ const renderExerciseItem = (item, index) => `<div class="item-row">
   <div class="item-fields">
     <div class="field compact">
       <label>種目</label>
-      <input type="text" list="exercise-options" value="${item.exercise}" data-index="${index}" data-field="exercise">
+      <select data-index="${index}" data-field="exercise">
+        ${exerciseOptions(item.exercise)}
+      </select>
     </div>
     <div class="set-list">
       ${item.sets.map((set, setIndex) => renderExerciseSet(index, set, setIndex)).join("")}
@@ -230,8 +278,8 @@ const renderItems = () => {
 };
 
 const addSet = () => {
-  const exercise = exerciseInput.value.trim();
-  if (!exercise) {
+  const exercise = exerciseSelect.value;
+  if (!exercise || exercise === BASE_EXERCISE_OPTIONS[0]) {
     setStatus("種目を入力してください");
     return;
   }
@@ -239,7 +287,7 @@ const addSet = () => {
   const reps = repsSelect.value;
   const sets = setsSelect.value;
   items.push({ type: "exercise", exercise, sets: [{ weight, reps, sets }] });
-  exerciseInput.value = "";
+  exerciseSelect.value = BASE_EXERCISE_OPTIONS[0];
   weightSelect.value = "";
   renderItems();
   setStatus("種目を追加しました");
@@ -323,6 +371,7 @@ const removeSet = (index, setIndex) => {
 initSelectRange(repsSelect, MAX_REPS, Number(DEFAULT_REPS));
 initSelectRange(setsSelect, MAX_SETS, Number(DEFAULT_SETS));
 setWeightOptions(BASE_WEIGHT_OPTIONS);
+setExerciseOptions(BASE_EXERCISE_OPTIONS);
 dateInput.value = formatToday();
 loadWeightOptionsFromLogs();
 
