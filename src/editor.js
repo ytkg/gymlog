@@ -24,32 +24,36 @@ const BASE_EXERCISE_OPTIONS = [
   "トレッドミル",
 ];
 const WEIGHT_MATCH = /(?:\(?体重-\d+(?:\.\d+)?\)?kg|\d+(?:\.\d+)?kg|自重)/g;
-let weightOptionsList = [...BASE_WEIGHT_OPTIONS];
-let exerciseOptionsList = [...BASE_EXERCISE_OPTIONS];
 
-const items = [];
+const state = {
+  items: [],
+  weightOptions: [...BASE_WEIGHT_OPTIONS],
+  exerciseOptions: [...BASE_EXERCISE_OPTIONS],
+};
 
-const dateInput = document.getElementById("date");
-const exerciseSelect = document.getElementById("exercise");
-const weightSelect = document.getElementById("weight");
-const repsSelect = document.getElementById("reps");
-const setsSelect = document.getElementById("sets");
-const addSetButton = document.getElementById("add-set");
-const addNoteButton = document.getElementById("add-note");
-const noteInput = document.getElementById("note");
-const markdownOutput = document.getElementById("markdown");
-const itemsContainer = document.getElementById("items");
-const statusLabel = document.getElementById("editor-status");
-const copyButton = document.getElementById("copy");
+const dom = {
+  dateInput: document.getElementById("date"),
+  exerciseSelect: document.getElementById("exercise"),
+  weightSelect: document.getElementById("weight"),
+  repsSelect: document.getElementById("reps"),
+  setsSelect: document.getElementById("sets"),
+  addSetButton: document.getElementById("add-set"),
+  addNoteButton: document.getElementById("add-note"),
+  noteInput: document.getElementById("note"),
+  markdownOutput: document.getElementById("markdown"),
+  itemsContainer: document.getElementById("items"),
+  statusLabel: document.getElementById("editor-status"),
+  copyButton: document.getElementById("copy"),
+};
 
 const setStatus = (text) => {
-  if (statusLabel) statusLabel.textContent = text;
+  if (dom.statusLabel) dom.statusLabel.textContent = text;
 };
 
 const saveState = () => {
   const payload = {
-    date: dateInput.value,
-    items,
+    date: dom.dateInput.value,
+    items: state.items,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 };
@@ -59,13 +63,12 @@ const loadState = () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object") {
-      if (typeof parsed.date === "string") {
-        dateInput.value = parsed.date;
-      }
-      if (Array.isArray(parsed.items)) {
-        items.splice(0, items.length, ...parsed.items);
-      }
+    if (!parsed || typeof parsed !== "object") return false;
+    if (typeof parsed.date === "string") {
+      dom.dateInput.value = parsed.date;
+    }
+    if (Array.isArray(parsed.items)) {
+      state.items.splice(0, state.items.length, ...parsed.items);
     }
     return true;
   } catch {
@@ -136,59 +139,46 @@ const sortWeights = (values) =>
     return keyA.text.localeCompare(keyB.text);
   });
 
-const initWeightSelect = (select) => {
-  for (const optionValue of weightOptionsList) {
-    const option = document.createElement("option");
-    option.value = optionValue;
-    option.textContent = optionValue || "重量なし";
-    select.appendChild(option);
+const buildOptions = (values, selectedValue, labelFor) =>
+  values
+    .map((optionValue) => {
+      const selected = optionValue === selectedValue ? " selected" : "";
+      return `<option value="${optionValue}"${selected}>${labelFor(optionValue)}</option>`;
+    })
+    .join("");
+
+const updateWeightSelect = () => {
+  const currentValue = dom.weightSelect.value;
+  dom.weightSelect.innerHTML = buildOptions(
+    state.weightOptions,
+    currentValue,
+    (value) => value || "重量なし"
+  );
+  if (state.weightOptions.includes(currentValue)) {
+    dom.weightSelect.value = currentValue;
   }
 };
 
-const weightOptions = (selectedValue) =>
-  weightOptionsList
-    .map((optionValue) => {
-      const selected = optionValue === selectedValue ? " selected" : "";
-      const label = optionValue || "重量なし";
-      return `<option value="${optionValue}"${selected}>${label}</option>`;
-    })
-    .join("");
+const updateExerciseSelect = () => {
+  const currentValue = dom.exerciseSelect.value;
+  dom.exerciseSelect.innerHTML = buildOptions(
+    state.exerciseOptions,
+    currentValue,
+    (value) => value
+  );
+  if (state.exerciseOptions.includes(currentValue)) {
+    dom.exerciseSelect.value = currentValue;
+  }
+};
 
 const setWeightOptions = (options) => {
-  weightOptionsList = sortWeights(Array.from(new Set(options)));
-  const currentValue = weightSelect.value;
-  weightSelect.innerHTML = "";
-  initWeightSelect(weightSelect);
-  if (weightOptionsList.includes(currentValue)) {
-    weightSelect.value = currentValue;
-  }
+  state.weightOptions = sortWeights(Array.from(new Set(options)));
+  updateWeightSelect();
 };
-
-const initExerciseSelect = (select) => {
-  for (const optionValue of exerciseOptionsList) {
-    const option = document.createElement("option");
-    option.value = optionValue;
-    option.textContent = optionValue;
-    select.appendChild(option);
-  }
-};
-
-const exerciseOptions = (selectedValue) =>
-  exerciseOptionsList
-    .map((optionValue) => {
-      const selected = optionValue === selectedValue ? " selected" : "";
-      return `<option value="${optionValue}"${selected}>${optionValue}</option>`;
-    })
-    .join("");
 
 const setExerciseOptions = (options) => {
-  exerciseOptionsList = Array.from(new Set(options));
-  const currentValue = exerciseSelect.value;
-  exerciseSelect.innerHTML = "";
-  initExerciseSelect(exerciseSelect);
-  if (exerciseOptionsList.includes(currentValue)) {
-    exerciseSelect.value = currentValue;
-  }
+  state.exerciseOptions = Array.from(new Set(options));
+  updateExerciseSelect();
 };
 
 const loadWeightOptionsFromLogs = async () => {
@@ -214,15 +204,15 @@ const loadWeightOptionsFromLogs = async () => {
 };
 
 const updateMarkdown = () => {
-  markdownOutput.value = buildMarkdown();
+  dom.markdownOutput.value = buildMarkdown();
 };
 
 const buildMarkdown = () => {
-  const date = dateInput.value;
+  const date = dom.dateInput.value;
   const lines = [];
   if (date) lines.push(`## ${date}`);
 
-  for (const item of items) {
+  for (const item of state.items) {
     if (item.type === "note") {
       if (lines.length && lines[lines.length - 1] !== "") lines.push("");
       lines.push(item.text);
@@ -257,7 +247,7 @@ const renderExerciseSet = (index, set, setIndex) => `
     <div class="field compact">
       <label>重量</label>
       <select data-index="${index}" data-set="${setIndex}" data-field="weight">
-        ${weightOptions(set.weight || "")}
+        ${buildOptions(state.weightOptions, set.weight || "", (value) => value || "重量なし")}
       </select>
     </div>
     <div class="field compact">
@@ -281,7 +271,7 @@ const renderExerciseItem = (item, index) => `<div class="item-row">
     <div class="field compact">
       <label>種目</label>
       <select data-index="${index}" data-field="exercise">
-        ${exerciseOptions(item.exercise)}
+        ${buildOptions(state.exerciseOptions, item.exercise, (value) => value)}
       </select>
     </div>
     <div class="set-list">
@@ -295,7 +285,7 @@ const renderExerciseItem = (item, index) => `<div class="item-row">
 </div>`;
 
 const renderItems = () => {
-  itemsContainer.innerHTML = items
+  dom.itemsContainer.innerHTML = state.items
     .map((item, index) => {
       if (item.type === "note") return renderNoteItem(item, index);
       return renderExerciseItem(item, index);
@@ -306,42 +296,42 @@ const renderItems = () => {
   saveState();
 };
 
-const addSet = () => {
-  const exercise = exerciseSelect.value;
+const addExercise = () => {
+  const exercise = dom.exerciseSelect.value;
   if (!exercise || exercise === BASE_EXERCISE_OPTIONS[0]) {
     setStatus("種目を入力してください");
     return;
   }
-  const weight = weightSelect.value;
-  const reps = repsSelect.value;
-  const sets = setsSelect.value;
-  items.push({ type: "exercise", exercise, sets: [{ weight, reps, sets }] });
-  exerciseSelect.value = BASE_EXERCISE_OPTIONS[0];
-  weightSelect.value = "";
+  const weight = dom.weightSelect.value;
+  const reps = dom.repsSelect.value;
+  const sets = dom.setsSelect.value;
+  state.items.push({ type: "exercise", exercise, sets: [{ weight, reps, sets }] });
+  dom.exerciseSelect.value = BASE_EXERCISE_OPTIONS[0];
+  dom.weightSelect.value = "";
   renderItems();
   setStatus("種目を追加しました");
 };
 
 const addNote = () => {
-  const text = noteInput.value.trim();
+  const text = dom.noteInput.value.trim();
   if (!text) {
     setStatus("メモを入力してください");
     return;
   }
-  items.push({ type: "note", text });
-  noteInput.value = "";
+  state.items.push({ type: "note", text });
+  dom.noteInput.value = "";
   renderItems();
   setStatus("メモを追加しました");
 };
 
 const removeItem = (index) => {
-  items.splice(index, 1);
+  state.items.splice(index, 1);
   renderItems();
   setStatus("削除しました");
 };
 
 const updateItemField = (index, field, value, setIndex = null) => {
-  const item = items[index];
+  const item = state.items[index];
   if (!item) return;
   if (item.type === "note") {
     if (field === "text") item.text = value;
@@ -354,11 +344,12 @@ const updateItemField = (index, field, value, setIndex = null) => {
     }
   }
   updateMarkdown();
+  saveState();
   setStatus("編集中");
 };
 
 const copyMarkdown = async () => {
-  const text = markdownOutput.value;
+  const text = dom.markdownOutput.value;
   if (!text) {
     setStatus("Markdown が空です");
     return;
@@ -367,55 +358,42 @@ const copyMarkdown = async () => {
     await navigator.clipboard.writeText(text);
     setStatus("コピーしました");
   } catch (err) {
-    markdownOutput.select();
+    dom.markdownOutput.select();
     document.execCommand("copy");
     setStatus("コピーしました");
   }
 };
 
 const addSetToItem = (index) => {
-  const item = items[index];
+  const item = state.items[index];
   if (!item || item.type !== "exercise") return;
   item.sets.push({ ...DEFAULT_SET });
   renderItems();
   setStatus("セットを追加しました");
   const setIndex = item.sets.length - 1;
-  const row = itemsContainer.querySelector(
+  const row = dom.itemsContainer.querySelector(
     `[data-index="${index}"][data-set="${setIndex}"][data-field="weight"]`
   );
-  if (row instanceof HTMLInputElement) row.focus();
+  if (row instanceof HTMLSelectElement) row.focus();
 };
 
 const removeSet = (index, setIndex) => {
-  const item = items[index];
+  const item = state.items[index];
   if (!item || item.type !== "exercise") return;
   item.sets.splice(setIndex, 1);
   if (item.sets.length === 0) {
-    items.splice(index, 1);
+    state.items.splice(index, 1);
   }
   renderItems();
   setStatus("削除しました");
 };
 
-initSelectRange(repsSelect, MAX_REPS, Number(DEFAULT_REPS));
-initSelectRange(setsSelect, MAX_SETS, Number(DEFAULT_SETS));
-setWeightOptions(BASE_WEIGHT_OPTIONS);
-setExerciseOptions(BASE_EXERCISE_OPTIONS);
-dateInput.value = formatToday();
-loadWeightOptionsFromLogs();
-if (!loadState()) {
-  dateInput.value = formatToday();
-}
-renderItems();
-
-addSetButton.addEventListener("click", addSet);
-addNoteButton.addEventListener("click", addNote);
-copyButton.addEventListener("click", copyMarkdown);
-dateInput.addEventListener("input", () => {
+const handleDateInput = () => {
   updateMarkdown();
   saveState();
-});
-itemsContainer.addEventListener("click", (event) => {
+};
+
+const handleItemsClick = (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
   const removeItemIndex = target.getAttribute("data-remove-item");
@@ -435,8 +413,9 @@ itemsContainer.addEventListener("click", (event) => {
   if (addSetIndex) {
     addSetToItem(Number(addSetIndex));
   }
-});
-itemsContainer.addEventListener("input", (event) => {
+};
+
+const handleItemsInput = (event) => {
   const target = event.target;
   if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
   const index = target.getAttribute("data-index");
@@ -444,4 +423,26 @@ itemsContainer.addEventListener("input", (event) => {
   const setIndex = target.getAttribute("data-set");
   if (!index || !field) return;
   updateItemField(Number(index), field, target.value, setIndex ? Number(setIndex) : null);
-});
+};
+
+const init = () => {
+  initSelectRange(dom.repsSelect, MAX_REPS, Number(DEFAULT_REPS));
+  initSelectRange(dom.setsSelect, MAX_SETS, Number(DEFAULT_SETS));
+  setWeightOptions(BASE_WEIGHT_OPTIONS);
+  setExerciseOptions(BASE_EXERCISE_OPTIONS);
+  dom.dateInput.value = formatToday();
+  loadWeightOptionsFromLogs();
+  if (!loadState()) {
+    dom.dateInput.value = formatToday();
+  }
+  renderItems();
+
+  dom.addSetButton.addEventListener("click", addExercise);
+  dom.addNoteButton.addEventListener("click", addNote);
+  dom.copyButton.addEventListener("click", copyMarkdown);
+  dom.dateInput.addEventListener("input", handleDateInput);
+  dom.itemsContainer.addEventListener("click", handleItemsClick);
+  dom.itemsContainer.addEventListener("input", handleItemsInput);
+};
+
+init();
