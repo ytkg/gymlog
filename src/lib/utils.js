@@ -42,15 +42,10 @@ export const currentMonthKey = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 };
 
-export const latestEntryDate = (entries) =>
-  entries.reduce((latest, entry) => (entry.date > latest ? entry.date : latest), "") || null;
-
 export const normalizeMeta = (entries, months, meta) => ({
   totalEntries: meta?.total_entries ?? entries.length,
   totalMonths: meta?.total_months ?? months.length,
-  latestEntryDate: meta?.latest_entry_date ?? latestEntryDate(entries),
   generatedAt: meta?.generated_at ?? null,
-  source: meta?.source ?? "unknown",
 });
 
 export const ensureArray = (value) => (Array.isArray(value) ? value : []);

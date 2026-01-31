@@ -34,7 +34,7 @@ export const createLogsHandler =
       const bodyText = await readObjectText(object, opts.logKey);
       const entries = parseEntries(bodyText);
       const months = monthCounts(entries);
-      const meta = buildMeta(entries, months, opts.logKey);
+      const meta = buildMeta(entries, months);
 
       return c.json(
         { entries, month_counts: months, meta },

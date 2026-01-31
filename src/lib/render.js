@@ -47,20 +47,13 @@ export const renderStats = (entries, months, meta) => {
     return;
   }
 
-  const total = meta.totalEntries;
   const totalMonths = meta.totalMonths;
   const currentKey = currentMonthKey();
   const currentMonth = months.find((m) => m.date === currentKey);
   const currentCount = currentMonth ? currentMonth.count : 0;
   const currentPrice = currentCount > 0 ? yen(MONTHLY_FEE / currentCount) : null;
-  const latestEntry = meta.latestEntryDate ? formatDate(meta.latestEntryDate) : "なし";
 
   dom.stats.innerHTML = `
-    <div class="stat">
-      <div class="stat-label">総エントリー</div>
-      <div class="stat-value">${total}</div>
-      <div class="stat-hint">これまでの積み重ね（${totalMonths} か月）</div>
-    </div>
     <div class="stat">
       <div class="stat-label">今月の回数</div>
       <div class="stat-value">${currentCount}</div>
@@ -75,11 +68,6 @@ export const renderStats = (entries, months, meta) => {
            </div>`
         : ""
     }
-    <div class="stat">
-      <div class="stat-label">最新の記録</div>
-      <div class="stat-value">${latestEntry}</div>
-      <div class="stat-hint">ソース: ${meta.source}</div>
-    </div>
   `;
 };
 

@@ -12,7 +12,7 @@ describe("buildMeta", () => {
     vi.useRealTimers();
   });
 
-  it("builds meta with counts, latest date, and deterministic generated_at", () => {
+  it("builds meta with counts and deterministic generated_at", () => {
     const entries: Entry[] = [
       { date: "2024-02-01", body: "" },
       { date: "2024-01-31", body: "" },
@@ -22,11 +22,9 @@ describe("buildMeta", () => {
       { date: "2024-02-01", count: 1 },
     ];
 
-    expect(buildMeta(entries, months, "source.md")).toEqual({
+    expect(buildMeta(entries, months)).toEqual({
       total_entries: 2,
       total_months: 2,
-      latest_entry_date: "2024-02-01",
-      source: "source.md",
       generated_at: "2024-03-04T05:06:07.000Z",
     });
   });
