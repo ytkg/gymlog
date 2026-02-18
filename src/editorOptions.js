@@ -59,6 +59,11 @@ export const BENCH_PRESS_WEIGHT_OPTIONS = [
   "70kg",
 ];
 
+export const LEG_PRESS_WEIGHT_OPTIONS = [
+  "53kg",
+  "103kg",
+];
+
 export const BASE_EXERCISE_OPTIONS = [
   "種目を選択",
   "ベンチプレス",

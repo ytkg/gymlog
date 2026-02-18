@@ -3,6 +3,7 @@ import {
   BASE_WEIGHT_OPTIONS,
   BENCH_PRESS_WEIGHT_OPTIONS,
   DURATION_OPTIONS,
+  LEG_PRESS_WEIGHT_OPTIONS,
   SPEED_OPTIONS,
 } from "./editorOptions.js";
 
@@ -15,6 +16,7 @@ const DEFAULT_SET = { weight: "", reps: DEFAULT_REPS, sets: DEFAULT_SETS };
 const STORAGE_KEY = "gymlog-editor-state";
 const TREADMILL_EXERCISE = "トレッドミル";
 const BENCH_PRESS_EXERCISE = "ベンチプレス";
+const LEG_PRESS_EXERCISE = "レッグプレス";
 const DEFAULT_TREADMILL_DURATION = "20";
 const DEFAULT_TREADMILL_SPEED = "4.5";
 
@@ -157,8 +159,11 @@ const ensureOptionValue = (values, selectedValue) => {
   return values.includes(selectedValue) ? values : [...values, selectedValue];
 };
 
-const weightOptionsForExercise = (exercise) =>
-  exercise === BENCH_PRESS_EXERCISE ? BENCH_PRESS_WEIGHT_OPTIONS : BASE_WEIGHT_OPTIONS;
+const weightOptionsForExercise = (exercise) => {
+  if (exercise === BENCH_PRESS_EXERCISE) return BENCH_PRESS_WEIGHT_OPTIONS;
+  if (exercise === LEG_PRESS_EXERCISE) return LEG_PRESS_WEIGHT_OPTIONS;
+  return BASE_WEIGHT_OPTIONS;
+};
 
 const buildOptions = (values, selectedValue, labelFor) =>
   ensureOptionValue(values, selectedValue)
