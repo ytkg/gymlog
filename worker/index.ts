@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cache } from "hono/cache";
+import { cors } from "hono/cors";
 import { etag } from "hono/etag";
 import { CACHE_CONTROL_REVALIDATE } from "./lib/httpCache";
 import { createLogsHandler } from "./usecases/logsApi";
@@ -16,6 +17,15 @@ const LOG_KEY = "ジム記録/logs.md";
 const CACHE_CONTROL = CACHE_CONTROL_REVALIDATE;
 const EDGE_CACHE_NAME = "gymlog-api";
 const EDGE_CACHE_CONTROL = "s-maxage=60";
+
+app.use(
+  "/api/*",
+  cors({
+    origin: "*",
+    allowMethods: ["GET", "HEAD", "OPTIONS"],
+    allowHeaders: ["*"],
+  })
+);
 
 app.get(
   "/api/logs.json",
